@@ -19,7 +19,7 @@ class RealAIChatbot {
       console.log('🔍 Debug - import.meta.env:', import.meta.env);
     }
     
-    this.model = "llama3-8b-8192"; // Updated to supported Groq model
+    this.model = "llama-3.1-8b-instant";
     this.conversationHistory = [];
   }
 
@@ -117,6 +117,7 @@ ISTRUZIONI:
 - Sii specifico e usa i dati reali dell'utente
 - Fornisci consigli pratici e personalizzati
 - Se l'utente chiede analisi, usa i dati sopra riportati
+- Se l'utente chiede grafici o simulazioni, non fingere di disegnare grafici con tabelle markdown: spiega i risultati in modo sintetico. L'interfaccia generera' il grafico vero quando possibile.
 - Sii professionale ma amichevole
 - Non inventare dati che non hai
 - Concentrati su consigli di investimento, budgeting, e pianificazione finanziaria`;
@@ -204,6 +205,47 @@ Per abilitare l'AI reale:
 3. Ricarica l'app
 
 *Questa è una demo della funzionalità AI.*`;
+  }
+
+  async analyzeInvestmentSimulation(payload, userName = 'Utente') {
+    if (!this.groq) {
+      return `Analisi locale: scenario calcolato dall'app. La mediana Monte Carlo e' ${payload?.monteCarlo?.median ?? 'non disponibile'}, mentre lo scenario prudente e' ${payload?.monteCarlo?.p10 ?? 'non disponibile'}. Configura Groq per ottenere una lettura discorsiva piu completa.`;
+    }
+
+    try {
+      const completion = await this.groq.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: `Sei un analista finanziario prudente. Rispondi in italiano.
+Non inventare numeri e non modificare i dati ricevuti.
+Non dare ordini di acquisto o vendita.
+Chiama p10 "scenario prudente" e p90 "scenario favorevole"; non chiamarli minimo o massimo.
+Drawdown significa calo massimo dal picco, non disinvestimento.
+Non usare markdown, asterischi, tabelle o elenchi lunghi.
+Usa sezioni con titoli semplici, una riga vuota tra sezioni, massimo 2 paragrafi brevi per sezione.
+Spiega in modo chiaro:
+- cosa indicano scenario deterministico, Monte Carlo e stress test
+- quali sono le ipotesi piu fragili
+- quali domande dovrebbe farsi ${userName}
+- cosa renderebbe il piano piu robusto
+Chiudi sempre ricordando che e' una simulazione, non consulenza finanziaria.`
+          },
+          {
+            role: "user",
+            content: JSON.stringify(payload, null, 2)
+          }
+        ],
+        model: this.model,
+        temperature: 0.35,
+        max_tokens: 900
+      });
+
+      return completion.choices[0]?.message?.content || "Non sono riuscito a generare l'analisi AI.";
+    } catch (error) {
+      console.error('Investment AI analysis error:', error);
+      return "Non sono riuscito a contattare Groq per l'analisi AI. I calcoli locali restano disponibili e verificabili.";
+    }
   }
 
   // Clear conversation history

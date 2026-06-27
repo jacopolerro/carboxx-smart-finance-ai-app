@@ -14,9 +14,134 @@ import {
   PencilIcon
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend
+} from 'recharts';
 import { financialChatbot } from '../lib/chatbot';
 import { realAIChatbot } from '../lib/aiChatbot';
 import { useUserContext } from '../context/UserContext';
+
+const formatCurrency = (value) =>
+  new Intl.NumberFormat('it-IT', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0
+  }).format(value || 0);
+
+const parseItalianNumber = (value) => {
+  if (!value) return null;
+  const normalized = value
+    .replace(/\s/g, '')
+    .replace(/\.(?=\d{3}(?:\D|$))/g, '')
+    .replace(',', '.');
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : null;
+};
+
+const extractFirstNumber = (text, patterns) => {
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    const parsed = parseItalianNumber(match?.[1]);
+    if (parsed !== null) return parsed;
+  }
+
+  return null;
+};
+
+const buildInvestmentSimulationChart = (query) => {
+  const lowerQuery = query.toLowerCase();
+  const isSimulationRequest = /(grafico|simul|proiez|scenario|piano di accumulo|pac)/i.test(lowerQuery);
+
+  if (!isSimulationRequest) return null;
+
+  const monthlyAmount = extractFirstNumber(query, [
+    /(?:€\s*)?(\d+(?:[.,]\d+)?)\s*(?:€|euro)?\s*(?:al mese|\/mese|mensili|mensile|ogni mese)/i,
+    /(?:pac|piano di accumulo|investire|investimento)\D{0,25}(?:€\s*)?(\d+(?:[.,]\d+)?)/i
+  ]);
+  const years = extractFirstNumber(query, [
+    /(\d{1,2})\s*(?:anni|anno)/i,
+    /per\s+(\d{1,2})/i
+  ]);
+
+  if (!monthlyAmount || !years || years < 1) return null;
+
+  const annualReturn = extractFirstNumber(query, [
+    /(\d+(?:[.,]\d+)?)\s*%/i,
+    /rendimento\D{0,20}(\d+(?:[.,]\d+)?)/i
+  ]) ?? 5;
+  const initialCapital = extractFirstNumber(query, [
+    /capitale iniziale\D{0,15}(?:€\s*)?(\d+(?:[.,]\d+)?)/i,
+    /partendo da\D{0,15}(?:€\s*)?(\d+(?:[.,]\d+)?)/i
+  ]) ?? 0;
+
+  const cappedYears = Math.min(Math.round(years), 60);
+  const cappedAnnualReturn = Math.min(Math.max(annualReturn, -20), 25);
+  const monthlyReturn = Math.pow(1 + cappedAnnualReturn / 100, 1 / 12) - 1;
+  const data = [{
+    year: 0,
+    versato: Math.round(initialCapital),
+    valoreStimato: Math.round(initialCapital),
+    crescita: 0
+  }];
+  let balance = initialCapital;
+  let invested = initialCapital;
+
+  for (let month = 1; month <= cappedYears * 12; month += 1) {
+    balance = balance * (1 + monthlyReturn) + monthlyAmount;
+    invested += monthlyAmount;
+
+    if (month % 12 === 0) {
+      data.push({
+        year: month / 12,
+        versato: Math.round(invested),
+        valoreStimato: Math.round(balance),
+        crescita: Math.round(balance - invested)
+      });
+    }
+  }
+
+  return {
+    type: 'investment-simulation',
+    title: `Simulazione PAC: ${formatCurrency(monthlyAmount)} al mese per ${cappedYears} anni`,
+    subtitle: `Rendimento annuo ipotizzato ${cappedAnnualReturn.toLocaleString('it-IT')}%. Dati indicativi, non consulenza finanziaria.`,
+    parameters: {
+      monthlyAmount,
+      years: cappedYears,
+      annualReturn: cappedAnnualReturn,
+      initialCapital
+    },
+    data
+  };
+};
+
+const buildInvestmentSimulationSummary = (chart) => {
+  const finalPoint = chart.data[chart.data.length - 1];
+  const totalInvested = finalPoint.versato;
+  const estimatedValue = finalPoint.valoreStimato;
+  const estimatedGrowth = finalPoint.crescita;
+
+  return `Ho generato una simulazione PAC con dati calcolati dall'app, non inventati dall'AI.
+
+Parametri usati:
+- Versamento mensile: ${formatCurrency(chart.parameters.monthlyAmount)}
+- Durata: ${chart.parameters.years} anni
+- Rendimento annuo ipotizzato: ${chart.parameters.annualReturn.toLocaleString('it-IT')}%
+- Capitale iniziale: ${formatCurrency(chart.parameters.initialCapital)}
+
+Risultato stimato:
+- Capitale versato: ${formatCurrency(totalInvested)}
+- Valore finale stimato: ${formatCurrency(estimatedValue)}
+- Crescita stimata: ${formatCurrency(estimatedGrowth)}
+
+Assunzione: rendimento composto mensile e versamenti costanti. Questa e' una simulazione indicativa, non consulenza finanziaria.`;
+};
 
 export default function Chat() {
   const { userProfile } = useUserContext();
@@ -122,8 +247,11 @@ Cosa vorresti sapere delle tue finanze? 💰`,
 
     try {
       let aiResponse;
+      const generatedChart = buildInvestmentSimulationChart(inputMessage);
       
-      if (useRealAI) {
+      if (generatedChart) {
+        aiResponse = buildInvestmentSimulationSummary(generatedChart);
+      } else if (useRealAI) {
         // Use real AI (Groq)
         aiResponse = await realAIChatbot.sendMessage(inputMessage, userProfile.name);
       } else {
@@ -139,6 +267,7 @@ Cosa vorresti sapere delle tue finanze? 💰`,
         id: (Date.now() + 1).toString(),
         type: 'assistant',
         content: aiResponse,
+        chart: generatedChart,
         timestamp: new Date(),
         insights: [],
         relevantData: []
@@ -343,6 +472,10 @@ function ChatMessage({ message }) {
           <div className="whitespace-pre-wrap text-sm leading-relaxed">
             {message.content}
           </div>
+
+          {message.chart?.type === 'investment-simulation' && (
+            <InvestmentSimulationChart chart={message.chart} />
+          )}
           
           {/* Metadata for assistant messages */}
           {!isUser && message.relevantData?.length > 0 && (
@@ -365,6 +498,81 @@ function ChatMessage({ message }) {
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function InvestmentSimulationChart({ chart }) {
+  return (
+    <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4 text-gray-900 shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold">{chart.title}</h3>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{chart.subtitle}</p>
+      </div>
+
+      <div className="h-72 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chart.data} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis
+              dataKey="year"
+              tickFormatter={(value) => `${value}a`}
+              stroke="#6b7280"
+              tick={{ fontSize: 12 }}
+            />
+            <YAxis
+              tickFormatter={(value) => `${Math.round(value / 1000)}k`}
+              stroke="#6b7280"
+              tick={{ fontSize: 12 }}
+              width={42}
+            />
+            <Tooltip
+              formatter={(value, name) => [formatCurrency(value), name]}
+              labelFormatter={(value) => `Anno ${value}`}
+              contentStyle={{
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
+              }}
+            />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="versato"
+              name="Capitale versato"
+              stroke="#2563eb"
+              strokeWidth={2}
+              dot={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="valoreStimato"
+              name="Valore stimato"
+              stroke="#16a34a"
+              strokeWidth={3}
+              dot={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+        <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
+          <div className="text-gray-500 dark:text-gray-400">Mensile</div>
+          <div className="font-semibold">{formatCurrency(chart.parameters.monthlyAmount)}</div>
+        </div>
+        <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
+          <div className="text-gray-500 dark:text-gray-400">Durata</div>
+          <div className="font-semibold">{chart.parameters.years} anni</div>
+        </div>
+        <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
+          <div className="text-gray-500 dark:text-gray-400">Rendimento</div>
+          <div className="font-semibold">{chart.parameters.annualReturn.toLocaleString('it-IT')}%</div>
+        </div>
+        <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
+          <div className="text-gray-500 dark:text-gray-400">Capitale iniziale</div>
+          <div className="font-semibold">{formatCurrency(chart.parameters.initialCapital)}</div>
+        </div>
+      </div>
+    </div>
   );
 }
 
