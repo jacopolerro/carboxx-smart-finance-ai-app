@@ -14,7 +14,7 @@ import {
   EyeIcon,
   EyeSlashIcon
 } from '@heroicons/react/24/outline';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useThemeContext } from '../context/ThemeContext';
 import { usePrivacyContext } from '../context/PrivacyContext';
 import { useUserContext } from '../context/UserContext';

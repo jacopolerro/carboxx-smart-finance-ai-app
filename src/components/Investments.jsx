@@ -7,12 +7,14 @@ import {
   CurrencyDollarIcon,
   ClockIcon,
   ArrowPathIcon,
-  TrashIcon
+  TrashIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { db } from '../lib/database';
 import Modal, { FormField, Input, Select } from './Modal';
 import { usePrivacyContext } from '../context/PrivacyContext';
+import InvestmentLab from './InvestmentLab';
 
 export default function Investments() {
   const [investments, setInvestments] = useState([]);
@@ -208,6 +210,7 @@ export default function Investments() {
           {[
             { id: 'portfolio', name: 'Portafoglio', icon: ChartBarIcon },
             { id: 'pac', name: 'Piani PAC', icon: ClockIcon },
+            { id: 'simulator', name: 'Simulatore', icon: BeakerIcon },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -349,6 +352,16 @@ export default function Investments() {
               ))}
             </div>
           )}
+        </motion.div>
+      )}
+
+      {/* Simulator Tab */}
+      {activeTab === 'simulator' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <InvestmentLab />
         </motion.div>
       )}
 
