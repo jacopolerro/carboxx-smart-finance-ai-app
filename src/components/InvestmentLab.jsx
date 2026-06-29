@@ -272,12 +272,54 @@ export default function InvestmentLab() {
   );
 }
 
-const cleanAiText = (text) =>
+const MONEY_CONTEXT_PATTERN =
+  /\b(capitale|valore|patrimonio|obiettiv\w*|mediana|scenario prudente|scenario favorevole|nominale|reale|tasse|investit\w*|versat\w*|contribut\w*|accumul\w*|portafoglio|import\w*|liquidit[aà]|finale)\b/i;
+const CURRENCY_WORD_PATTERN =
+  /(^|[^\w€])(\d{1,3}(?:[.\s]\d{3})+(?:,\d+)?|\d+(?:,\d+)?)\s*(?:euro|eur)\b/gi;
+const BARE_NUMBER_PATTERN = /(^|[^\w€])(\d{1,3}(?:[.\s]\d{3})+(?:,\d+)?|\d+(?:,\d+)?)/g;
+const NON_MONEY_SUFFIX_PATTERN =
+  /^\s*(?:%|(?:anni?|mesi?|giorni?|scenari?|simulazioni?|iterazioni?|run|volatilit[aà]|rendimento|inflazione|drawdown|percentuale|probabilit[aà])\b)/i;
+const PROBABILITY_METRIC_PATTERN = /^\s*probabilit[aà]\b/i;
+
+const formatAiCurrencyAmounts = (text) =>
   text
+    .split('\n')
+    .map((line) => {
+      const withCurrencyWords = line.replace(
+        CURRENCY_WORD_PATTERN,
+        (match, prefix, amount, offset, source) => {
+          const amountStart = offset + prefix.length;
+          const left = source.slice(0, amountStart);
+
+          if (/€\s*$/.test(left)) return match;
+          return `${prefix}€${amount}`;
+        }
+      );
+
+      if (!MONEY_CONTEXT_PATTERN.test(withCurrencyWords) || PROBABILITY_METRIC_PATTERN.test(withCurrencyWords)) {
+        return withCurrencyWords;
+      }
+
+      return withCurrencyWords.replace(BARE_NUMBER_PATTERN, (match, prefix, amount, offset, source) => {
+        const amountStart = offset + prefix.length;
+        const left = source.slice(0, amountStart);
+        const right = source.slice(amountStart + amount.length);
+
+        if (/€\s*$/.test(left) || NON_MONEY_SUFFIX_PATTERN.test(right)) {
+          return match;
+        }
+
+        return `${prefix}€${amount}`;
+      });
+    })
+    .join('\n');
+
+const cleanAiText = (text) =>
+  formatAiCurrencyAmounts(text
     .replace(/\*\*/g, '')
     .replace(/^\s*#+\s*/gm, '')
     .replace(/\s+$/gm, '')
-    .trim();
+    .trim());
 
 const parseAiInsight = (content) => {
   const lines = cleanAiText(content).split('\n');
@@ -409,7 +451,7 @@ function MetricCard({ icon: Icon, label, value, helper, tone }) {
     <div className="card">
       <div className="flex items-start gap-3">
         <div className={`rounded-lg p-3 ${tones[tone]}`}>
-          <Icon className="h-6 w-6" />
+          {React.createElement(Icon, { className: 'h-6 w-6' })}
         </div>
         <div className="min-w-0">
           <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>

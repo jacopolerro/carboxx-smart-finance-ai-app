@@ -13,59 +13,6 @@ export class Database {
         localStorage.setItem(DB_PREFIX + table, JSON.stringify([]));
       }
     });
-    
-    // Add sample data if database is empty
-    this.addSampleDataIfEmpty();
-  }
-
-  addSampleDataIfEmpty() {
-    const pacPlans = this.getTable('pac_plans');
-    const investments = this.getTable('investments');
-    const transactions = this.getTable('transactions');
-    
-    // Add sample PAC if none exist
-    if (pacPlans.length === 0) {
-      this.addPACPlan({
-        assetName: 'MSCI World ETF',
-        assetSymbol: 'SWDA',
-        amount: 300,
-        frequency: 'monthly',
-        startDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(), // 3 months ago
-        initialCapital: 1000
-      });
-      
-      this.addPACPlan({
-        assetName: 'S&P 500 ETF',
-        assetSymbol: 'SPY',
-        amount: 200,
-        frequency: 'monthly',
-        startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), // 2 months ago
-        initialCapital: 0
-      });
-    }
-    
-    // Add sample investment if none exist
-    if (investments.length === 0) {
-      this.addInvestment({
-        name: 'Apple Inc.',
-        symbol: 'AAPL',
-        type: 'azione',
-        quantity: 10,
-        purchasePrice: 150,
-        purchaseDate: '2024-01-15'
-      });
-    }
-    
-    // Add sample transactions if none exist
-    if (transactions.length === 0) {
-      this.addTransaction({
-        type: 'income',
-        amount: 3000,
-        category: 'Stipendio',
-        description: 'Stipendio mensile',
-        date: new Date().toISOString()
-      });
-    }
   }
 
   // Utility methods
@@ -208,30 +155,34 @@ export class Database {
     const start = startDate ? new Date(startDate) : now;
     
     switch (frequency) {
-      case 'weekly':
+      case 'weekly': {
         const nextWeekly = new Date(start);
         while (nextWeekly <= now) {
           nextWeekly.setDate(nextWeekly.getDate() + 7);
         }
         return nextWeekly.toISOString();
-      case 'monthly':
+      }
+      case 'monthly': {
         const nextMonthly = new Date(start);
         while (nextMonthly <= now) {
           nextMonthly.setMonth(nextMonthly.getMonth() + 1);
         }
         return nextMonthly.toISOString();
-      case 'quarterly':
+      }
+      case 'quarterly': {
         const nextQuarterly = new Date(start);
         while (nextQuarterly <= now) {
           nextQuarterly.setMonth(nextQuarterly.getMonth() + 3);
         }
         return nextQuarterly.toISOString();
-      default:
+      }
+      default: {
         const nextDefault = new Date(start);
         while (nextDefault <= now) {
           nextDefault.setMonth(nextDefault.getMonth() + 1);
         }
         return nextDefault.toISOString();
+      }
     }
   }
 

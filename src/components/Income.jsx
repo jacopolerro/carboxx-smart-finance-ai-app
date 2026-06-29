@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlusIcon, CurrencyDollarIcon, CalendarIcon, TagIcon } from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { db } from '../lib/database';
 import Modal, { FormField, Input, Select } from './Modal';
 
@@ -74,7 +74,7 @@ export default function Income() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="card"
@@ -90,9 +90,9 @@ export default function Income() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
 
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -109,11 +109,11 @@ export default function Income() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
       </div>
 
       {/* Income List */}
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -143,7 +143,7 @@ export default function Income() {
             })}
           </div>
         )}
-      </motion.div>
+      </Motion.div>
 
       {/* Modal */}
       {showModal && (
@@ -159,7 +159,7 @@ export default function Income() {
 
 function IncomeCard({ income, category }) {
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -189,7 +189,7 @@ function IncomeCard({ income, category }) {
           +€{income.amount.toLocaleString('it-IT')}
         </p>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }
 
@@ -282,7 +282,7 @@ function AddIncomeModal({ onClose, onSubmit, categories }) {
         </div>
 
         {formData.amount && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800"
@@ -300,7 +300,7 @@ function AddIncomeModal({ onClose, onSubmit, categories }) {
                 Annuale stimato: €{(parseFloat(formData.amount || 0) * 12).toLocaleString('it-IT')}
               </div>
             )}
-          </motion.div>
+          </Motion.div>
         )}
 
         <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">

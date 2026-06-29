@@ -3,20 +3,15 @@ import { db } from './database';
 
 class RealAIChatbot {
   constructor() {
-    // For demo purposes, we'll include the key here
-    // In production, this should be in environment variables
     const apiKey = import.meta.env?.VITE_GROQ_API_KEY || null;
     
     if (apiKey) {
       this.groq = new Groq({
         apiKey: apiKey,
-        dangerouslyAllowBrowser: true // Enable browser usage
+        dangerouslyAllowBrowser: true
       });
-      console.log('✅ Groq API configurata correttamente:', apiKey.substring(0, 20) + '...');
     } else {
       this.groq = null;
-      console.log('🚀 Groq API key non configurata. Usando modalità simulata.');
-      console.log('🔍 Debug - import.meta.env:', import.meta.env);
     }
     
     this.model = "llama-3.1-8b-instant";
@@ -201,7 +196,7 @@ Ho ricevuto la tua domanda: "${query}"
 
 Per abilitare l'AI reale:
 1. Ottieni una API key gratuita da console.groq.com
-2. Aggiungi la chiave nelle impostazioni
+2. Aggiungi la chiave nel file .env
 3. Ricarica l'app
 
 *Questa è una demo della funzionalità AI.*`;
@@ -223,6 +218,7 @@ Non dare ordini di acquisto o vendita.
 Chiama p10 "scenario prudente" e p90 "scenario favorevole"; non chiamarli minimo o massimo.
 Drawdown significa calo massimo dal picco, non disinvestimento.
 Non usare markdown, asterischi, tabelle o elenchi lunghi.
+Per ogni importo monetario usa sempre il simbolo € prima della cifra, ad esempio €1.876. Non scrivere importi senza valuta.
 Usa sezioni con titoli semplici, una riga vuota tra sezioni, massimo 2 paragrafi brevi per sezione.
 Spiega in modo chiaro:
 - cosa indicano scenario deterministico, Monte Carlo e stress test

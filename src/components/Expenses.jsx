@@ -1,9 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { PlusIcon, CreditCardIcon, CalendarIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { db } from '../lib/database';
 import Modal, { FormField, Input, Select } from './Modal';
+
+const EXPENSE_CATEGORIES = [
+  { value: 'casa', label: '🏠 Casa/Affitto', color: 'text-blue-600' },
+  { value: 'trasporti', label: '🚗 Trasporti', color: 'text-red-600' },
+  { value: 'cibo', label: '🍕 Cibo & Ristorazione', color: 'text-green-600' },
+  { value: 'shopping', label: '🛒 Shopping', color: 'text-purple-600' },
+  { value: 'intrattenimento', label: '🎬 Intrattenimento', color: 'text-yellow-600' },
+  { value: 'salute', label: '💊 Salute & Benessere', color: 'text-pink-600' },
+  { value: 'educazione', label: '📚 Educazione', color: 'text-indigo-600' },
+  { value: 'utenze', label: '💡 Utenze', color: 'text-orange-600' },
+  { value: 'altro', label: '📦 Altro', color: 'text-gray-600' }
+];
+
+const EXPENSE_CHART_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#6366F1', '#F97316', '#6B7280'];
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState([]);
@@ -12,11 +26,7 @@ export default function Expenses() {
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [categoryData, setCategoryData] = useState([]);
 
-  useEffect(() => {
-    loadExpenses();
-  }, []);
-
-  const loadExpenses = () => {
+  const loadExpenses = useCallback(() => {
     const allExpenses = db.getExpenses();
     setExpenses(allExpenses);
     
@@ -35,7 +45,7 @@ export default function Expenses() {
     // Category breakdown
     const categoryTotals = {};
     allExpenses.forEach(expense => {
-      const category = expenseCategories.find(cat => cat.value === expense.category);
+      const category = EXPENSE_CATEGORIES.find(cat => cat.value === expense.category);
       const label = category ? category.label : expense.category;
       categoryTotals[label] = (categoryTotals[label] || 0) + expense.amount;
     });
@@ -43,30 +53,20 @@ export default function Expenses() {
     const chartData = Object.entries(categoryTotals).map(([name, value], index) => ({
       name,
       value,
-      color: COLORS[index % COLORS.length]
+      color: EXPENSE_CHART_COLORS[index % EXPENSE_CHART_COLORS.length]
     }));
     setCategoryData(chartData);
-  };
+  }, []);
+
+  useEffect(() => {
+    loadExpenses();
+  }, [loadExpenses]);
 
   const handleAddExpense = (formData) => {
     db.addExpense(formData);
     loadExpenses();
     setShowModal(false);
   };
-
-  const expenseCategories = [
-    { value: 'casa', label: '🏠 Casa/Affitto', color: 'text-blue-600' },
-    { value: 'trasporti', label: '🚗 Trasporti', color: 'text-red-600' },
-    { value: 'cibo', label: '🍕 Cibo & Ristorazione', color: 'text-green-600' },
-    { value: 'shopping', label: '🛒 Shopping', color: 'text-purple-600' },
-    { value: 'intrattenimento', label: '🎬 Intrattenimento', color: 'text-yellow-600' },
-    { value: 'salute', label: '💊 Salute & Benessere', color: 'text-pink-600' },
-    { value: 'educazione', label: '📚 Educazione', color: 'text-indigo-600' },
-    { value: 'utenze', label: '💡 Utenze', color: 'text-orange-600' },
-    { value: 'altro', label: '📦 Altro', color: 'text-gray-600' }
-  ];
-
-  const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#6366F1', '#F97316', '#6B7280'];
 
   return (
     <div className="space-y-8">
@@ -92,7 +92,7 @@ export default function Expenses() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="card"
@@ -108,9 +108,9 @@ export default function Expenses() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
 
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -127,14 +127,14 @@ export default function Expenses() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
       </div>
 
       {/* Charts and Expenses Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Category Breakdown */}
         {categoryData.length > 0 && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -162,11 +162,11 @@ export default function Expenses() {
                 <Tooltip formatter={(value) => [`€${value}`, 'Spesa']} />
               </PieChart>
             </ResponsiveContainer>
-          </motion.div>
+          </Motion.div>
         )}
 
         {/* Recent Expenses */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -186,18 +186,18 @@ export default function Expenses() {
           ) : (
             <div className="space-y-3">
               {expenses.slice(0, 5).map((expense) => {
-                const category = expenseCategories.find(cat => cat.value === expense.category);
+                const category = EXPENSE_CATEGORIES.find(cat => cat.value === expense.category);
                 return (
                   <ExpenseCard key={expense.id} expense={expense} category={category} compact />
                 );
               })}
             </div>
           )}
-        </motion.div>
+        </Motion.div>
       </div>
 
       {/* Full Expense List */}
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -220,21 +220,21 @@ export default function Expenses() {
         ) : (
           <div className="space-y-4">
             {expenses.map((expense) => {
-              const category = expenseCategories.find(cat => cat.value === expense.category);
+              const category = EXPENSE_CATEGORIES.find(cat => cat.value === expense.category);
               return (
                 <ExpenseCard key={expense.id} expense={expense} category={category} />
               );
             })}
           </div>
         )}
-      </motion.div>
+      </Motion.div>
 
       {/* Modal */}
       {showModal && (
         <AddExpenseModal
           onClose={() => setShowModal(false)}
           onSubmit={handleAddExpense}
-          categories={expenseCategories}
+          categories={EXPENSE_CATEGORIES}
         />
       )}
     </div>
@@ -243,7 +243,7 @@ export default function Expenses() {
 
 function ExpenseCard({ expense, category, compact = false }) {
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       className={`flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${compact ? 'py-3' : ''}`}
@@ -279,7 +279,7 @@ function ExpenseCard({ expense, category, compact = false }) {
           -€{expense.amount.toLocaleString('it-IT')}
         </p>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }
 
@@ -372,7 +372,7 @@ function AddExpenseModal({ onClose, onSubmit, categories }) {
         </div>
 
         {formData.amount && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800"
@@ -390,7 +390,7 @@ function AddExpenseModal({ onClose, onSubmit, categories }) {
                 Annuale stimato: €{(parseFloat(formData.amount || 0) * 12).toLocaleString('it-IT')}
               </div>
             )}
-          </motion.div>
+          </Motion.div>
         )}
 
         <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">

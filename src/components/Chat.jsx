@@ -13,7 +13,7 @@ import {
   ArchiveBoxIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import {
   ResponsiveContainer,
   LineChart,
@@ -444,7 +444,7 @@ function ChatMessage({ message }) {
   const isUser = message.type === 'user';
 
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
@@ -497,7 +497,7 @@ function ChatMessage({ message }) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }
 
@@ -578,7 +578,7 @@ function InvestmentSimulationChart({ chart }) {
 
 function TypingIndicator() {
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="flex justify-start"
@@ -595,6 +595,6 @@ function TypingIndicator() {
           </div>
         </div>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }

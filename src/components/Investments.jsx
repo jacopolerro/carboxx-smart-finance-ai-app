@@ -10,7 +10,7 @@ import {
   TrashIcon,
   BeakerIcon
 } from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { db } from '../lib/database';
 import Modal, { FormField, Input, Select } from './Modal';
 import { usePrivacyContext } from '../context/PrivacyContext';
@@ -143,7 +143,7 @@ export default function Investments() {
 
       {/* Portfolio Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="card"
@@ -159,9 +159,9 @@ export default function Investments() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
 
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -182,9 +182,9 @@ export default function Investments() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
 
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -201,7 +201,7 @@ export default function Investments() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
       </div>
 
       {/* Tabs */}
@@ -232,7 +232,7 @@ export default function Investments() {
 
       {/* Portfolio Tab */}
       {activeTab === 'portfolio' && (
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="space-y-6"
@@ -259,12 +259,12 @@ export default function Investments() {
               ))}
             </div>
           )}
-        </motion.div>
+        </Motion.div>
       )}
 
       {/* PAC Tab */}
       {activeTab === 'pac' && (
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="space-y-6"
@@ -272,7 +272,7 @@ export default function Investments() {
           {/* PAC Summary Cards */}
           {pacPlans.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <motion.div
+              <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="card"
@@ -288,9 +288,9 @@ export default function Investments() {
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </Motion.div>
 
-              <motion.div
+              <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
@@ -307,9 +307,9 @@ export default function Investments() {
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </Motion.div>
 
-              <motion.div
+              <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -326,7 +326,7 @@ export default function Investments() {
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </Motion.div>
             </div>
           )}
           
@@ -352,17 +352,17 @@ export default function Investments() {
               ))}
             </div>
           )}
-        </motion.div>
+        </Motion.div>
       )}
 
       {/* Simulator Tab */}
       {activeTab === 'simulator' && (
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
           <InvestmentLab />
-        </motion.div>
+        </Motion.div>
       )}
 
       {/* Modals */}
@@ -390,7 +390,7 @@ function InvestmentCard({ investment, onDelete, formatAmount }) {
   const gainLossPercentage = (gainLoss / investedAmount) * 100;
 
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="card hover:shadow-lg transition-shadow"
@@ -456,13 +456,13 @@ function InvestmentCard({ investment, onDelete, formatAmount }) {
           </button>
         </div>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }
 
 function PacCard({ plan, onDelete, formatAmount }) {
   return (
-    <motion.div
+    <Motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="card hover:shadow-lg transition-shadow"
@@ -544,7 +544,7 @@ function PacCard({ plan, onDelete, formatAmount }) {
           </button>
         </div>
       </div>
-    </motion.div>
+    </Motion.div>
   );
 }
 
@@ -647,7 +647,7 @@ function AddInvestmentModal({ onClose, onSubmit }) {
         </div>
 
         {formData.quantity && formData.purchasePrice && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800"
@@ -660,7 +660,7 @@ function AddInvestmentModal({ onClose, onSubmit }) {
                 €{(parseFloat(formData.quantity || 0) * parseFloat(formData.purchasePrice || 0)).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
               </span>
             </div>
-          </motion.div>
+          </Motion.div>
         )}
 
         <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -803,7 +803,7 @@ function AddPacModal({ onClose, onSubmit }) {
         </div>
 
         {formData.amount && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800"
@@ -832,7 +832,7 @@ function AddPacModal({ onClose, onSubmit }) {
                 {formData.initialCapital && ` + €${formData.initialCapital} iniziale`}
               </div>
             </div>
-          </motion.div>
+          </Motion.div>
         )}
 
         <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
   const sizeClasses = {
@@ -16,7 +16,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center px-4">
             {/* Backdrop */}
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -25,7 +25,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
             />
             
             {/* Modal */}
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -50,7 +50,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
               <div className="space-y-4">
                 {children}
               </div>
-            </motion.div>
+            </Motion.div>
           </div>
         </div>
       )}

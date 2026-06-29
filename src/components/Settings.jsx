@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { 
   Cog6ToothIcon, 
   MoonIcon, 
@@ -12,13 +12,60 @@ import {
   UserIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { useThemeContext } from '../context/ThemeContext';
 import { useUserContext } from '../context/UserContext';
+import { createSafeDemoData } from '../lib/demoData';
+
+const FINANCE_TABLES = ['users', 'transactions', 'investments', 'pac_plans', 'expenses', 'budgets'];
+const FINANCE_PREFIX = 'finance_app_';
+const CHAT_KEYS = ['chat_messages', 'finance_chats', 'active_chat_id'];
+
+const toExportShape = () => ({
+  users: JSON.parse(localStorage.getItem(`${FINANCE_PREFIX}users`) || '[]'),
+  transactions: JSON.parse(localStorage.getItem(`${FINANCE_PREFIX}transactions`) || '[]'),
+  investments: JSON.parse(localStorage.getItem(`${FINANCE_PREFIX}investments`) || '[]'),
+  pacPlans: JSON.parse(localStorage.getItem(`${FINANCE_PREFIX}pac_plans`) || '[]'),
+  expenses: JSON.parse(localStorage.getItem(`${FINANCE_PREFIX}expenses`) || '[]'),
+  budgets: JSON.parse(localStorage.getItem(`${FINANCE_PREFIX}budgets`) || '[]'),
+  userProfile: JSON.parse(localStorage.getItem('user_profile') || 'null'),
+  exportDate: new Date().toISOString(),
+  app: 'smart-finance-demo',
+  version: 1
+});
+
+const writeDataset = (data, mode = 'private') => {
+  const tableData = {
+    users: data.users || [],
+    transactions: data.transactions || [],
+    investments: data.investments || [],
+    pac_plans: data.pacPlans || data.pac_plans || [],
+    expenses: data.expenses || [],
+    budgets: data.budgets || []
+  };
+
+  FINANCE_TABLES.forEach((table) => {
+    localStorage.setItem(`${FINANCE_PREFIX}${table}`, JSON.stringify(tableData[table] || []));
+  });
+
+  CHAT_KEYS.forEach((key) => localStorage.removeItem(key));
+  localStorage.setItem(`${FINANCE_PREFIX}data_mode`, mode);
+
+  if (data.userProfile) {
+    localStorage.setItem('user_profile', JSON.stringify(data.userProfile));
+  }
+};
+
+const clearFinanceDataset = () => {
+  FINANCE_TABLES.forEach((table) => localStorage.setItem(`${FINANCE_PREFIX}${table}`, JSON.stringify([])));
+  CHAT_KEYS.forEach((key) => localStorage.removeItem(key));
+  localStorage.setItem(`${FINANCE_PREFIX}data_mode`, 'private');
+};
 
 export default function Settings() {
   const { theme, toggleTheme } = useThemeContext();
   const { userProfile, updateProfile } = useUserContext();
+  const importInputRef = useRef(null);
   const [notifications, setNotifications] = useState({
     budgetAlerts: true,
     investmentUpdates: false,
@@ -31,13 +78,7 @@ export default function Settings() {
   });
 
   const exportData = () => {
-    const data = {
-      investments: JSON.parse(localStorage.getItem('finance_app_investments') || '[]'),
-      pacPlans: JSON.parse(localStorage.getItem('finance_app_pac_plans') || '[]'),
-      transactions: JSON.parse(localStorage.getItem('finance_app_transactions') || '[]'),
-      expenses: JSON.parse(localStorage.getItem('finance_app_expenses') || '[]'),
-      exportDate: new Date().toISOString()
-    };
+    const data = toExportShape();
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -48,6 +89,35 @@ export default function Settings() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const importData = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        const hasKnownData = ['transactions', 'expenses', 'investments', 'pacPlans', 'pac_plans', 'budgets']
+          .some((key) => Array.isArray(parsed[key]));
+
+        if (!hasKnownData) {
+          alert('Il file non sembra un backup valido di Smart Finance.');
+          return;
+        }
+
+        if (confirm('Importare questo backup? I dati finanziari e la cronologia chat attuali verranno sostituiti.')) {
+          writeDataset(parsed, 'private');
+          window.location.reload();
+        }
+      } catch {
+        alert('Non riesco a leggere il file. Verifica che sia un JSON valido.');
+      } finally {
+        event.target.value = '';
+      }
+    };
+    reader.readAsText(file);
   };
 
   const handleSaveProfile = () => {
@@ -64,11 +134,26 @@ export default function Settings() {
   };
 
   const clearAllData = () => {
-    if (confirm('⚠️ ATTENZIONE: Questa azione eliminerà TUTTI i tuoi dati (investimenti, PAC, spese, ecc.). Sei sicuro?')) {
-      if (confirm('⚠️ ULTIMA CONFERMA: I dati verranno persi per sempre. Procedere?')) {
-        localStorage.clear();
+    if (confirm('Questa azione svuota dati finanziari e chat, ma lascia tema e profilo. Hai esportato un backup se ti serve?')) {
+      if (confirm('Confermi il reset del profilo finanziario privato?')) {
+        clearFinanceDataset();
         window.location.reload();
       }
+    }
+  };
+
+  const loadSafeDemo = () => {
+    if (confirm('Caricare la demo sicura? Sostituira dati finanziari e chat attuali con dati realistici ma inventati.')) {
+      writeDataset({
+        ...createSafeDemoData(),
+        userProfile: {
+          ...userProfile,
+          name: 'Demo Studente',
+          email: '',
+          preferences: userProfile.preferences
+        }
+      }, 'safe-demo');
+      window.location.reload();
     }
   };
 
@@ -213,8 +298,21 @@ export default function Settings() {
       title: "💾 Dati & Backup",
       settings: [
         {
+          name: "Demo Sicura",
+          description: "Carica dati realistici ma inventati per mostrare l'app senza esporre informazioni private",
+          component: (
+            <button
+              onClick={loadSafeDemo}
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <ShieldCheckIcon className="h-4 w-4" />
+              <span>Carica Demo</span>
+            </button>
+          )
+        },
+        {
           name: "Esporta Dati",
-          description: "Scarica un backup completo dei tuoi dati",
+          description: "Scarica un backup JSON dei dati attuali prima di fare prove o reset",
           component: (
             <button 
               onClick={exportData}
@@ -226,15 +324,37 @@ export default function Settings() {
           )
         },
         {
-          name: "Cancella Tutto",
-          description: "Elimina tutti i dati dall'applicazione",
+          name: "Importa Backup",
+          description: "Ripristina un backup JSON esportato da questa app",
+          component: (
+            <>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json"
+                onChange={importData}
+                className="hidden"
+              />
+              <button
+                onClick={() => importInputRef.current?.click()}
+                className="btn-secondary flex items-center space-x-2"
+              >
+                <ArrowUpTrayIcon className="h-4 w-4" />
+                <span>Importa</span>
+              </button>
+            </>
+          )
+        },
+        {
+          name: "Profilo Privato Pulito",
+          description: "Svuota dati finanziari e chat per partire con i tuoi dati reali da zero",
           component: (
             <button 
               onClick={clearAllData}
               className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 flex items-center space-x-2"
             >
               <TrashIcon className="h-4 w-4" />
-              <span>Elimina Tutto</span>
+              <span>Svuota</span>
             </button>
           )
         }
@@ -272,7 +392,7 @@ export default function Settings() {
       {/* Settings Sections */}
       <div className="space-y-8">
         {settingsSections.map((section, index) => (
-          <motion.div
+          <Motion.div
             key={section.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -299,12 +419,12 @@ export default function Settings() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </Motion.div>
         ))}
       </div>
 
       {/* App Info */}
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -323,7 +443,7 @@ export default function Settings() {
           <span>•</span>
           <span>AI-Powered</span>
         </div>
-      </motion.div>
+      </Motion.div>
     </div>
   );
 }

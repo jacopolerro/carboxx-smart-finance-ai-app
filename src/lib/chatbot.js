@@ -60,7 +60,7 @@ export class FinancialChatbot {
     const insights = [];
     
     if (data.portfolio) {
-      const { totalIncome, totalExpenses, totalInvestments, netWorth, cashFlow } = data.portfolio;
+      const { totalIncome, totalExpenses, totalInvestments, cashFlow } = data.portfolio;
       
       // Cash flow analysis
       if (cashFlow > 0) {
@@ -104,123 +104,9 @@ export class FinancialChatbot {
     return insights;
   }
 
-  // Simulated LLM response generation
-  async generateResponse(query, relevantData, insights) {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const queryLower = query.toLowerCase();
-    
-    // Template-based responses for different types of queries
-    if (queryLower.includes('ciao') || queryLower.includes('hello')) {
-      return `👋 Ciao! Sono il tuo assistente finanziario AI. Ho analizzato i tuoi dati e posso aiutarti con:
-
-• 📊 Analisi del portafoglio
-• 💰 Consigli di investimento  
-• 📈 Pianificazione budget
-• 🎯 Strategie di risparmio
-
-Cosa vorresti sapere delle tue finanze?`;
-    }
-    
-    if (queryLower.includes('portafoglio') || queryLower.includes('situazione')) {
-      const portfolio = relevantData.portfolio;
-      return `📈 **Analisi del tuo portafoglio:**
-
-💰 **Patrimonio netto**: €${portfolio.netWorth?.toLocaleString('it-IT') || 0}
-📊 **Cash flow**: €${portfolio.cashFlow?.toLocaleString('it-IT') || 0}
-💼 **Investimenti**: €${portfolio.totalInvestments?.toLocaleString('it-IT') || 0}
-
-**Insights chiave:**
-${insights.map(insight => `• ${insight}`).join('\n')}
-
-Vuoi approfondire qualche aspetto specifico?`;
-    }
-    
-    if (queryLower.includes('investiment') || queryLower.includes('azioni')) {
-      return `🚀 **Analisi Investimenti:**
-
-${relevantData.investments.length > 0 ? `
-Hai ${relevantData.investments.length} investimenti attivi.
-
-**Consigli strategici:**
-• 🌍 Diversifica geograficamente (USA, Europa, Mercati Emergenti)
-• 📊 Mantieni un mix 70% azionario, 30% obbligazionario
-• 🔄 Considera ETF a basso costo per diversificazione
-• ⏰ Investi regolarmente con i PAC per mediare i prezzi
-
-**Prossimi passi:** Ti suggerisco di aggiungere un ETF World per diversificare ulteriormente.
-` : `
-Non hai ancora investimenti registrati. 
-
-**Consigli per iniziare:**
-• 🎯 Inizia con un ETF World diversificato
-• 💡 Considera un PAC mensile di €200-500
-• 📚 Studia i mercati prima di investire
-• ⚡ Mantieni sempre un fondo di emergenza
-
-Vuoi che ti aiuti a pianificare il tuo primo investimento?`}`;
-    }
-    
-    if (queryLower.includes('spese') || queryLower.includes('budget')) {
-      const totalExpenses = relevantData.expenses.reduce((sum, e) => sum + e.amount, 0);
-      return `💳 **Analisi delle Spese:**
-
-📊 **Spese totali**: €${totalExpenses.toLocaleString('it-IT')}
-
-**Consigli di ottimizzazione:**
-• 🏠 Casa: Max 30% del reddito
-• 🚗 Trasporti: Max 15% del reddito  
-• 🍕 Cibo: Max 10% del reddito
-• 🎬 Intrattenimento: Max 5% del reddito
-
-**Strategia 50/30/20:**
-• 50% Necessità (casa, cibo, utenze)
-• 30% Desideri (intrattenimento, shopping)
-• 20% Risparmio e investimenti
-
-${insights.map(insight => `• ${insight}`).join('\n')}`;
-    }
-    
-    if (queryLower.includes('pac') || queryLower.includes('piano accumulo')) {
-      return `🔄 **Piano di Accumulo Capitale (PAC):**
-
-**Vantaggi del PAC:**
-• 📈 Dollar Cost Averaging: Mediazione dei prezzi nel tempo
-• 🎯 Disciplina negli investimenti
-• 📊 Riduzione del rischio timing
-• 💰 Investimenti automatici
-
-**Strategia consigliata:**
-• 🌍 ETF MSCI World (60% del PAC)
-• 🇪🇺 ETF Europa (20% del PAC)  
-• 🚀 ETF Mercati Emergenti (20% del PAC)
-
-**Frequenza ottimale:** Mensile per ridurre commissioni e volatilità.
-
-Vuoi che ti aiuti a impostare un PAC personalizzato?`;
-    }
-
-    // Default response with general advice
-    return `🤖 **Assistente Finanziario AI**
-
-Ho analizzato la tua domanda "${query}" e i tuoi dati finanziari.
-
-**Insights personalizzati:**
-${insights.map(insight => `• ${insight}`).join('\n')}
-
-**Raccomandazioni generali:**
-• 📊 Rivedi il portafoglio ogni 3 mesi
-• 💰 Mantieni 3-6 mesi di spese come fondo emergenza
-• 📈 Investi a lungo termine (10+ anni)
-• 🎓 Continua a formarti sui mercati finanziari
-
-Posso aiutarti con domande specifiche su investimenti, budget, spese o pianificazione finanziaria. Cosa ti interessa di più?`;
-  }
-
   // Get chat memory context
   getChatMemory(chatId) {
-    const chat = chatManager.getActiveChat();
+    const chat = chatId ? chatManager.chats.get(chatId) : chatManager.getActiveChat();
     if (!chat) return '';
     
     // Build context from recent messages
@@ -406,7 +292,7 @@ ${this.generateNextSteps(relevantData, memoryContext)}`;
   }
 
   // Generate detailed analysis
-  generateDetailedAnalysis(relevantData) {
+  generateDetailedAnalysis() {
     return `🔍 **Analisi Approfondita:**
 
 📊 **Metriche Avanzate:**
@@ -421,7 +307,7 @@ ${this.generateNextSteps(relevantData, memoryContext)}`;
   }
 
   // Generate next steps
-  generateNextSteps(relevantData, context) {
+  generateNextSteps() {
     return `🎯 **Prossimi Passi Strategici:**
 
 1. **Immediate (0-30 giorni):**
@@ -450,7 +336,7 @@ ${this.generateNextSteps(relevantData, memoryContext)}`;
   }
 
   // Enhanced default response
-  generateDefaultResponse(query, insights, memoryContext, relevantData) {
+  generateDefaultResponse(query, insights, memoryContext) {
     return `🤖 **Assistente Finanziario AI Avanzato**
 
 Ho analizzato la tua domanda "${query}" utilizzando:

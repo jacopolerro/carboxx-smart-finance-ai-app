@@ -14,7 +14,7 @@ import {
   EyeIcon,
   EyeSlashIcon
 } from '@heroicons/react/24/outline';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { useThemeContext } from '../context/ThemeContext';
 import { usePrivacyContext } from '../context/PrivacyContext';
 import { useUserContext } from '../context/UserContext';
@@ -32,6 +32,7 @@ const navigation = [
 export default function Layout({ children, currentPage = '/', onNavigate }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [portfolioSummary, setPortfolioSummary] = useState({ netWorth: 0 });
+  const [dataMode, setDataMode] = useState('private');
   const { theme, toggleTheme } = useThemeContext();
   const { hideAmounts, toggleAmounts, formatAmount } = usePrivacyContext();
   const { userProfile } = useUserContext();
@@ -43,6 +44,7 @@ export default function Layout({ children, currentPage = '/', onNavigate }) {
     };
 
     loadPortfolioSummary();
+    setDataMode(localStorage.getItem('finance_app_data_mode') || 'private');
     // Refresh portfolio summary every 5 seconds
     const interval = setInterval(loadPortfolioSummary, 5000);
     
@@ -55,14 +57,14 @@ export default function Layout({ children, currentPage = '/', onNavigate }) {
       <AnimatePresence>
         {sidebarOpen && (
           <>
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
               onClick={() => setSidebarOpen(false)}
             />
-            <motion.div
+            <Motion.div
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
@@ -75,9 +77,8 @@ export default function Layout({ children, currentPage = '/', onNavigate }) {
                 closeSidebar={() => setSidebarOpen(false)}
                 formatAmount={formatAmount}
                 portfolioSummary={portfolioSummary}
-                userProfile={userProfile}
               />
-            </motion.div>
+            </Motion.div>
           </>
         )}
       </AnimatePresence>
@@ -89,7 +90,6 @@ export default function Layout({ children, currentPage = '/', onNavigate }) {
           onNavigate={onNavigate}
           formatAmount={formatAmount}
           portfolioSummary={portfolioSummary}
-          userProfile={userProfile}
         />
       </div>
 
@@ -110,6 +110,13 @@ export default function Layout({ children, currentPage = '/', onNavigate }) {
               <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {navigation.find(nav => nav.href === currentPage)?.name || 'Dashboard'}
               </h1>
+              <span className={`ml-3 rounded-full px-2.5 py-1 text-xs font-medium ${
+                dataMode === 'safe-demo'
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                  : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+              }`}>
+                {dataMode === 'safe-demo' ? 'Demo sicura' : 'Privato locale'}
+              </span>
             </div>
             
             <div className="flex items-center gap-x-4 lg:gap-x-6">
@@ -171,7 +178,7 @@ export default function Layout({ children, currentPage = '/', onNavigate }) {
   );
 }
 
-function SidebarContent({ currentPage, onNavigate, closeSidebar, formatAmount, portfolioSummary, userProfile }) {
+function SidebarContent({ currentPage, onNavigate, closeSidebar, formatAmount, portfolioSummary }) {
   return (
     <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-gray-800 px-6 pb-4">
       <div className="flex h-16 shrink-0 items-center justify-between">

@@ -3,9 +3,7 @@ import {
   ArrowTrendingUpIcon, 
   ArrowTrendingDownIcon, 
   CurrencyDollarIcon,
-  ChartBarIcon,
-  ArrowUpIcon,
-  ArrowDownIcon
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { 
   LineChart, 
@@ -23,7 +21,7 @@ import {
   Area,
   AreaChart
 } from 'recharts';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { db } from '../lib/database';
 import { usePrivacyContext } from '../context/PrivacyContext';
 
@@ -134,8 +132,7 @@ export default function Dashboard({ onNavigate }) {
     {
       name: 'Patrimonio Totale',
       value: portfolioData?.netWorth || 0,
-      change: '+12.5%',
-      changeType: 'increase',
+      helper: 'Totale registrato',
       icon: CurrencyDollarIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
@@ -143,8 +140,7 @@ export default function Dashboard({ onNavigate }) {
     {
       name: 'Entrate Mensili',
       value: portfolioData?.totalIncome || 0,
-      change: '+8.2%',
-      changeType: 'increase',
+      helper: 'Entrate registrate',
       icon: ArrowTrendingUpIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
@@ -152,8 +148,7 @@ export default function Dashboard({ onNavigate }) {
     {
       name: 'Spese Mensili',
       value: portfolioData?.totalExpenses || 0,
-      change: '-3.1%',
-      changeType: 'decrease',
+      helper: 'Spese registrate',
       icon: ArrowTrendingDownIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-50 dark:bg-red-900/20',
@@ -161,8 +156,7 @@ export default function Dashboard({ onNavigate }) {
     {
       name: 'Investimenti',
       value: portfolioData?.totalInvestments || 0,
-      change: '+15.7%',
-      changeType: 'increase',
+      helper: 'Portafoglio + PAC',
       icon: ChartBarIcon,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50 dark:bg-purple-900/20',
@@ -172,7 +166,7 @@ export default function Dashboard({ onNavigate }) {
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
-      <motion.div 
+      <Motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white"
@@ -181,12 +175,12 @@ export default function Dashboard({ onNavigate }) {
         <p className="text-blue-100 text-lg">
           Ecco una panoramica delle tue finanze di oggi, {new Date().toLocaleDateString('it-IT')}
         </p>
-      </motion.div>
+      </Motion.div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <motion.div
+          <Motion.div
             key={stat.name}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -203,23 +197,18 @@ export default function Dashboard({ onNavigate }) {
                   {formatAmount(stat.value)}
                 </p>
               </div>
-              <div className={`flex items-center ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
-                {stat.changeType === 'increase' ? (
-                  <ArrowUpIcon className="h-4 w-4" />
-                ) : (
-                  <ArrowDownIcon className="h-4 w-4" />
-                )}
-                <span className="ml-1 text-sm font-medium">{stat.change}</span>
+              <div className="ml-3 text-right">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{stat.helper}</span>
               </div>
             </div>
-          </motion.div>
+          </Motion.div>
         ))}
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Trend Chart */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -272,10 +261,10 @@ export default function Dashboard({ onNavigate }) {
               />
             </AreaChart>
           </ResponsiveContainer>
-        </motion.div>
+        </Motion.div>
 
         {/* Expense Breakdown */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -303,11 +292,11 @@ export default function Dashboard({ onNavigate }) {
               <Tooltip formatter={(value) => [`€${value}`, 'Spesa']} />
             </PieChart>
           </ResponsiveContainer>
-        </motion.div>
+        </Motion.div>
       </div>
 
       {/* Monthly Comparison */}
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
@@ -345,10 +334,10 @@ export default function Dashboard({ onNavigate }) {
             <Bar dataKey="investimenti" fill="#3B82F6" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </motion.div>
+      </Motion.div>
 
       {/* Quick Actions */}
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
@@ -398,7 +387,7 @@ export default function Dashboard({ onNavigate }) {
             </div>
           </div>
         </div>
-      </motion.div>
+      </Motion.div>
     </div>
   );
 }
